@@ -11,6 +11,8 @@
         crossorigin="" />
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.0/dist/L.Control.Locate.min.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.6.0/dist/geosearch.css" />
     <style>
         #map {
             height: 70vh;
@@ -24,7 +26,6 @@
     <input type="text" name="Latitude" placeholder="Lat" id="lat" />
     <input type="text" name="longitude" placeholder="Long" id="lng" />
     <button type="button" class="btn btn-secondary" id="go"> Go</button>
-    <button type="button" class="btn btn-secondary" id="remove"> remove</button>
     <div id="map"></div>
 </body>
 
@@ -32,50 +33,72 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin=""></script>
+
 <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.0/dist/L.Control.Locate.min.js"
     charset="utf-8"></script>
 
+<script src="https://unpkg.com/leaflet-geosearch@3.6.0/dist/geosearch.umd.js"></script>
+
 <script>
     //initilaize map
-    var map = L.map('map').setView([51.505, -0.09], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    var map = L.map('map').locate({ setView: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+   
+    var marker;
+    map.on('locationfound', function (ev) {
+        if (!marker) {
+            marker = L.marker(ev.latlng);
+        } else {
+            marker.setLatLng(ev.latlng);
+        }
+        L.marker([ev.latlng.lat, ev.latlng.lng], { draggable: true }).addTo(layerGroup);
+        document.getElementById("lat").value = new Number(JSON.parse(ev.latlng.lat));
+        document.getElementById("lng").value = new Number(JSON.parse(ev.latlng.lng));
+    });
 
+    var layerGroup = L.layerGroup().addTo(map);
     // set current location
     L.control.locate().addTo(map);
+    //search places
+    // L.Control.geocoder().addTo(map);
+    var searchControl = new GeoSearch.GeoSearchControl({
+        style: 'bar',
+        provider: new GeoSearch.OpenStreetMapProvider(),
+        autoClose: true, // optional: true|false  - default false
+        keepResult: true, // optional: true|false  - default false
+    });
+    map.addControl(searchControl);
 
     // static marker
-    var singleMarker = L.marker([51.5, -0.09], { draggable: true });
-    singleMarker.addTo(map);
-    let popup = singleMarker.bindPopup('this is popup' + singleMarker.getLatLng());
-    popup.addTo(map);
+    // var singleMarker = L.marker([51.5, -0.09], { draggable: true });
+    // singleMarker.addTo(layerGroup);
+    // let popup = singleMarker.bindPopup('this is popup' + singleMarker.getLatLng());
+    // popup.addTo(layerGroup);
 
     //set lat lng when click on map
     map.on('click', function (e) {
         console.log(e);
         // remove all the markers in one go
-        
+        layerGroup.clearLayers();
 
-        var layerGroup = L.layerGroup().addTo(map);
 
         // create markers
-        
         document.getElementById("lat").value = new Number(JSON.parse(e.latlng.lat));
         document.getElementById("lng").value = new Number(JSON.parse(e.latlng.lng));
         L.marker([e.latlng.lat, e.latlng.lng], { draggable: true }).addTo(layerGroup);
-        // L.marker().addTo(layerGroup);
     });
 
     //click Go button
     document.getElementById("go").onclick = function () {
         L.marker([document.getElementById("lat").value, document.getElementById("lng").value])
-            .addTo(map).bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+            .addTo(layerGroup).bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
             .openPopup();
     };
 
-    document.getElementById("remove").onclick = function () {
-        layerGroup.clearLayers();
-    };
-
+    // map.on('geosearch/showlocation', () => {
+    //     if (singleMarker) {
+    //         map.removeControl(singleMarker);
+    //         layerGroup.clearLayers();
+    //     }
+    // });
 </script>
