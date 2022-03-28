@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet JS Tutorial</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.0/dist/L.Control.Locate.min.css" />
+    <style>
+        #map {
+            height: 70vh;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <input type="text" name="Latitude" placeholder="Lat" id="lat" />
+    <input type="text" name="longitude" placeholder="Long" id="lng" />
+    <button type="button" class="btn btn-secondary" id="go"> Go</button>
+    <button type="button" class="btn btn-secondary" id="remove"> remove</button>
+    <div id="map"></div>
+</body>
+
+</html>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.0/dist/L.Control.Locate.min.js"
+    charset="utf-8"></script>
+
+<script>
+    //initilaize map
+    var map = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // set current location
+    L.control.locate().addTo(map);
+
+    // static marker
+    var singleMarker = L.marker([51.5, -0.09], { draggable: true });
+    singleMarker.addTo(map);
+    let popup = singleMarker.bindPopup('this is popup' + singleMarker.getLatLng());
+    popup.addTo(map);
+
+    //set lat lng when click on map
+    map.on('click', function (e) {
+        console.log(e);
+        // remove all the markers in one go
+        
+
+        var layerGroup = L.layerGroup().addTo(map);
+
+        // create markers
+        
+        document.getElementById("lat").value = new Number(JSON.parse(e.latlng.lat));
+        document.getElementById("lng").value = new Number(JSON.parse(e.latlng.lng));
+        L.marker([e.latlng.lat, e.latlng.lng], { draggable: true }).addTo(layerGroup);
+        // L.marker().addTo(layerGroup);
+    });
+
+    //click Go button
+    document.getElementById("go").onclick = function () {
+        L.marker([document.getElementById("lat").value, document.getElementById("lng").value])
+            .addTo(map).bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+            .openPopup();
+    };
+
+    document.getElementById("remove").onclick = function () {
+        layerGroup.clearLayers();
+    };
+
+</script>
